@@ -1,0 +1,445 @@
+@font-face {
+  font-family: LINESeedKR-bold;
+  src: url("../font/LINESeedKR/LINESeedKR-Bd.ttf");
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: LINESeedKR-regular;
+  src: url("../font/LINESeedKR/LINESeedKR-Rg.ttf");
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: LINESeedKR-thin;
+  src: url("../font/LINESeedKR/LINESeedKR-Th.ttf");
+  font-weight: 100;
+  font-style: normal;
+}
+
+body {
+  background-color: #121212;
+  font-family: LINESeedKR-regular;
+  color: white;
+  user-select: none;
+}
+
+header {
+  width: 100%;
+  height: 13vh;
+  font-size: 2.2vw;
+  font-family: LINESeedKR-bold;
+  border-bottom: 2px solid #3d3d3d;
+  padding-top: 15px;
+  position: relative;
+}
+
+article {
+  height: 87vh;
+  display: flex;
+}
+
+input,
+button {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  outline: none;
+  font-family: LINESeedKR-regular;
+  color: white;
+  background-color: #6b6b6b;
+  transition: 0.2s ease-in-out;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #4b4b4b;
+}
+
+table,
+tbody,
+thead {
+  width: 100%;
+}
+
+td,
+th {
+  border: 2px solid #3d3d3d;
+  height: 100%;
+}
+
+th {
+  font-size: 2vw;
+  height: 6vh;
+  width: 14.3%;
+}
+
+#worker-part {
+  width: 25vw;
+  max-width: 420px;
+  height: 100%;
+  border-right: 2px solid #3d3d3d;
+}
+
+#calender-workorder-part {
+  position: relative;
+  width: calc(100vw - 25vw);
+  height: 100%;
+}
+
+#register-part {
+  height: 15vh;
+  width: 100%;
+  border-bottom: 2px solid #3d3d3d;
+}
+
+#list-part {
+  height: calc(100% - 155px);
+}
+
+#register-part-title,
+#list-part-title {
+  font-size: 2.6vw;
+  text-align: center;
+  letter-spacing: -1.5px;
+  padding-top: 5px;
+}
+
+#worker-list {
+  height: calc(100% - 72px);
+  overflow-y: auto;
+}
+
+#register-form {
+  height: 45%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+#register-input {
+  height: 100%;
+  max-width: 240px;
+  width: 15vw;
+  margin-right: -6px;
+  border-radius: 20px 0px 0px 20px;
+  font-size: 2vw;
+  text-align: center;
+  padding-top: 0.5vw;
+  background-color: #222222;
+}
+#register-btn {
+  height: 100%;
+  max-width: 125px;
+  width: 8vw;
+  border-radius: 0px 20px 20px 0px;
+  font-size: 2vw;
+  padding-top: 0.5vw;
+}
+
+body.calender-mode #calender {
+  display: block;
+}
+
+#calender {
+  width: 66vw;
+  max-width: 1140px;
+  background-color: #252525;
+  border-radius: 20px 20px 0px 0px;
+  overflow: hidden;
+  display: none;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 5%;
+}
+
+#calender-header {
+  position: relative;
+  height: 10vh;
+}
+
+#copy-btn,
+#new-btn {
+  position: absolute;
+  top: 50%;
+  width: 7.3vw;
+  height: 7vh;
+  transform: translateY(-50%);
+  border-radius: 15px;
+  padding-top: 5px;
+  font-size: 1.8vw;
+}
+
+#copy-btn {
+  right: 4vw;
+}
+
+#new-btn {
+  width: 8.5vw;
+  left: 4vw;
+  font-size: 1.8vw;
+}
+
+#month-control {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 0.9vw;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3.6vw;
+  font-family: LINESeedKR-bold;
+}
+
+#month-control span {
+  padding-top: 7px;
+}
+
+#prev-btn,
+#next-btn {
+  width: 3vw;
+  height: 3vw;
+  border-radius: 50%;
+  background-size: 2vw;
+  background-image: url(../icon/next.svg);
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+#prev-btn {
+  transform: rotate(180deg);
+}
+
+body.calender-mode #work-order-select {
+  display: none;
+}
+
+body #work-order-select {
+  position: relative;
+  width: 70vw;
+  height: 80vh;
+  top: 0;
+  left: 0;
+}
+
+#work-order-select > p {
+  text-align: center;
+  font-size: 3vw;
+  font-family: "LINESeedKR-bold";
+  margin-bottom: 0.5vh;
+}
+
+#work-order {
+  display: flex;
+  justify-content: space-around;
+}
+
+#order-save-btn {
+  position: absolute;
+  left: 50%;
+  bottom: -1.5vh;
+  transform: translateX(-50%);
+  width: 20vw;
+  height: 5vh;
+  border-radius: 50px;
+  font-size: 1.6vw;
+  padding-top: 0.5vh;
+}
+
+#sunday,
+#weekday,
+#saturday {
+  border-bottom: 1px solid #3d3d3d;
+  padding-bottom: 0.5vh;
+}
+
+#toggle-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 2vw;
+  width: 9vw;
+  height: 5vh;
+  font-size: 1.3vw;
+  border-radius: 20px;
+}
+
+body.calender-mode #toggle-btn::after {
+  content: "근무순서설정";
+}
+
+#toggle-btn::after {
+  content: "달력보기";
+}
+
+.hidden {
+  display: none;
+  visibility: hidden;
+}
+
+.flex-center-align {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.list-child {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 8vh;
+  margin: 1.5vh 1vw;
+  padding: 0 1vw;
+  border: 2px solid #3d3d3d;
+  border-radius: 20px;
+  transition: 0.3s;
+  position: relative;
+}
+.list-child:hover {
+  border: 2px solid #7e7e7e;
+}
+
+.list-name {
+  font-size: 2vw;
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding-left: 0.5vw;
+  padding-top: 0.5vh;
+}
+
+.what-start {
+  position: absolute;
+  right: 8.5vw;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.revise-btn,
+.delete-btn {
+  width: 3vw;
+  height: 3vw;
+  border-radius: 100%;
+}
+
+.revise-btn:hover {
+  background-color: #66cfb6;
+}
+.delete-btn:hover {
+  background-color: #cf6679;
+}
+
+.revise-btn {
+  background: url(../icon/revise.svg) no-repeat #4d9c89 center;
+  background-size: 2.3vw;
+  margin-right: 0.5vw;
+}
+
+.delete-btn {
+  background: url(../icon/delete.svg) no-repeat #9c4d5b center;
+  background-size: 2vw;
+}
+
+.sunday,
+.direct-sunday,
+.sunday-start {
+  color: #ff4444;
+}
+
+.saturday,
+.saturday-start {
+  color: #46a6ff;
+}
+
+.date,
+.calender-name {
+  text-align: center;
+  font-size: 1.8vw;
+  transition: 0.2s;
+}
+
+.calender-name {
+  font-size: 1.4vw;
+  height: 5vh;
+  padding: 0.2vw;
+}
+
+.date:hover {
+  background-color: #1d1d1d;
+}
+
+.date {
+  cursor: pointer;
+  border-bottom: 1px solid #3d3d3d;
+  padding: 0.1vw;
+}
+
+.order-title {
+  font-size: 2.5vw;
+  text-align: center;
+  border-bottom: 1px solid #3d3d3d;
+  margin-bottom: 1vh;
+}
+
+.work-orders {
+  font-size: 1.8vw;
+  text-align: center;
+  overflow: auto;
+  height: 60vh;
+}
+
+.work-order {
+  width: 11vw;
+  height: 6vh;
+  margin-bottom: 1vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 0.3vh;
+  background-color: #303030;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+}
+
+.work-order:hover {
+  background-color: #515151;
+}
+
+#weekday .next-weekday-worker,
+#saturday .next-saturday-worker,
+#sunday .next-sunday-worker {
+  background-color: dodgerblue;
+}
+
+.revised-name-save {
+  height: 100%;
+  max-width: 125px;
+  width: 6.3vw;
+  border-radius: 20px;
+  font-size: 1.4vw;
+  padding-top: 0.5vw;
+}
+
+.revise-input {
+  height: 100%;
+  max-width: 230px;
+  width: 15vw;
+  border-radius: 20px;
+  font-size: 2vw;
+  text-align: left;
+  padding-top: 0.3vw;
+  padding-left: 0.5vw;
+  background-color: #222222;
+}
+
+.calender-name.hover {
+  background-color: dodgerblue;
+}

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>산불근무표 자동화 앱</title>
+    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="stylesheet" href="./css/reset.css" />
+  </head>
+  <body class="calender-mode">
+    <header class="flex-center-align">
+      <h1>산불근무표자동화웹앱</h1>
+      <button id="toggle-btn"></button>
+    </header>
+    <article>
+      <div id="worker-part">
+        <div id="register-part">
+          <p id="register-part-title">근무자 입력</p>
+          <div id="register-form">
+            <input id="register-input" type="text" />
+            <button id="register-btn">추가</button>
+          </div>
+        </div>
+        <div id="list-part">
+          <p id="list-part-title">근무자 목록</p>
+          <div id="worker-list">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="calender-workorder-part">
+        <div id="calender">
+          <div id="calender-header">
+            <div id="month-control">
+              <button id="prev-btn"></button>
+              <span id="calender-title"></span>
+              <button id="next-btn"></button>
+            </div>
+            <button id="copy-btn">복사하기</button>
+          </div>
+          <table id="calender-body">
+            <thead>
+              <tr>
+                <th class="sunday">일</th>
+                <th>월</th>
+                <th>화</th>
+                <th>수</th>
+                <th>목</th>
+                <th>금</th>
+                <th class="saturday">토</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div id="work-order-select">
+          <p>다음 근무자를 선택해주세요</p>
+          <div id="work-order">
+            <div id="weekday">
+              <p class="order-title">평일</p>
+              <div class="work-orders"></div>
+            </div>
+            <div id="saturday">
+              <p class="order-title">토요일</p>
+              <div class="work-orders"></div>
+            </div>
+            <div id="sunday">
+              <p class="order-title">일요일</p>
+              <div class="work-orders"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+    <script src="index.js"></script>
+  </body>
+</html>
