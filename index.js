@@ -1,11 +1,13 @@
 (() => {
   const toggleBtn = getElement("id", "toggle-btn");
-  const workOrder = getElement("id", "work-order");
   const registerForm = getElement("id", "register-form");
   const calenderHeader = getElement("id", "calender-header");
   const calenderTitle = getElement("id", "calender-title");
   const workerListElem = getElement("id", "worker-list");
   const tbody = document.querySelector("#calender-body tbody");
+  const workOrders = [...document.querySelectorAll(".work-orders")];
+  /**workerList에서 쉽게 로직을 적용하기위한 꼼수 */
+  const listKey = ["weekday", "saturday", "sunday"];
 
   /**
    * HTML요소를 가져와주는 함수
@@ -31,9 +33,6 @@
   function setData(key, data) {
     const stringified = JSON.stringify(data);
     localStorage.setItem(key, stringified);
-    if (key === "workerList") {
-      workerListRender();
-    }
   }
 
   /**
@@ -66,8 +65,13 @@
   function registerFormEvent() {
     const input = getElement("id", "register-input");
     const workerName = input.value;
-    const workerList = getData("workerList");
-    const workerNameList = workerList.map(({ name }) => name);
+    const workerList = getData("newWorkerList");
+    const {
+      weekday: weekdayList,
+      sunday: sundayList,
+      saturday: saturdayList,
+    } = workerList;
+    const workerNameList = weekdayList.map(({ name }) => name);
 
     input.value = "";
 
@@ -77,14 +81,20 @@
     if (!workerNameList.indexOf(noSpacedWorkername))
       return alert("동명이인이 있습니다.");
 
-    workerList.push({
+    weekdayList.push({
       name: workerName,
-      weekday: workerList.length === 0 ? true : false,
-      saturday: workerList.length === 0 ? true : false,
-      sunday: workerList.length === 0 ? true : false,
+      isNext: weekdayList.length === 0 ? true : false,
+    });
+    sundayList.push({
+      name: workerName,
+      isNext: sundayList.length === 0 ? true : false,
+    });
+    saturdayList.push({
+      name: workerName,
+      isNext: saturdayList.length === 0 ? true : false,
     });
 
-    setData("workerList", workerList);
+    setData("newWorkerList", workerList);
     workerListRender();
     calenderDataMaker();
   }
@@ -93,22 +103,21 @@
    * 근무자 목록 갱신해주는 함수
    */
   function workerListRender() {
-    const workerList = getData("workerList");
+    const workerList = getData("newWorkerList");
     if (!workerList) {
-      setData("workerList", []);
+      setData("newWorkerList", {
+        weekday: [],
+        sunday: [],
+        saturday: [],
+      });
       return;
     }
 
     workerListElem.innerHTML = "";
-    workerList.forEach((worker) => {
+    workerList.weekday.forEach((worker) => {
       workerListElem.innerHTML += `
       <div class="list-child">
         <span class="list-name">${worker.name}</span>
-        <div class="what-start">
-        ${worker.weekday ? "<span>평일</span>" : ""}
-        ${worker.saturday ? "<span class='saturday-start'>토요일</span>" : ""}
-        ${worker.sunday ? "<span class='sunday-start'>일요일</span>" : ""}
-        </div>
         <div class="btns flex-center-align">
           <button class="revise-btn"></button>
           <button class="delete-btn"></button>
@@ -127,19 +136,18 @@
    * @param {string} type
    * @returns {string}
    */
-  function workerSelector(workerArr, type) {
+  function workerSelector(workerArr) {
     if (workerArr.length === 0) {
       return "";
     }
 
-    const worker = workerArr.filter((worker) => worker[type] === true)[0];
+    const worker = workerArr.filter((worker) => worker.isNext === true)[0];
     const workerIndex = workerArr.indexOf(worker);
-    workerArr[workerIndex][type] = false;
-    if (workerArr.length === workerIndex + 1) {
-      workerArr[0][type] = true;
-    } else {
-      workerArr[workerIndex + 1][type] = true;
-    }
+    workerArr[workerIndex].isNext = false;
+    workerArr.length === workerIndex + 1
+      ? (workerArr[0].isNext = true)
+      : (workerArr[workerIndex + 1].isNext = true);
+
     return worker.name;
   }
 
@@ -152,8 +160,8 @@
     const nextMonth = getData("currentMonth");
     const key = currentYear + "-" + nextMonth;
     const newData = [];
-    const workerList = getData("workerList") ?? [];
-    let type;
+    const workerList = getData("newWorkerList");
+    let list;
 
     if (isNew) {
       const lastDate = new Date(currentYear, nextMonth + 1, 0).getDate();
@@ -162,17 +170,16 @@
         let worker;
         switch (day) {
           case 0:
-            type = "sunday";
+            list = workerList.sunday;
             break;
           case 6:
-            type = "saturday";
+            list = workerList.saturday;
             break;
           default:
-            type = "weekday";
+            list = workerList.weekday;
             break;
         }
-
-        worker = workerSelector(workerList, type);
+        worker = workerSelector(list);
 
         const dayData = {
           date: i + 1,
@@ -187,17 +194,17 @@
       data.forEach((obj) => {
         switch (obj.day) {
           case 0:
-            type = "sunday";
+            list = workerList.sunday;
             break;
           case 6:
-            type = "saturday";
+            list = workerList.saturday;
             break;
           default:
-            type = "weekday";
+            list = workerList.weekday;
             break;
         }
 
-        obj.worker = workerSelector(workerList, type);
+        obj.worker = workerSelector(list);
       });
       newData.push(...data);
     }
@@ -287,6 +294,22 @@
       calenderTitle.parentElement.firstElementChild.classList.add("hidden");
     }
 
+    // 근무순서설정 드래그 기능 구현
+    workOrders.forEach((elem) => {
+      elem.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        const dragTarget = document.querySelector(".dragging");
+        const siblings = [
+          ...elem.querySelectorAll(".work-order:not(.dragging)"),
+        ];
+        const nextElem = siblings.find((sibling) => {
+          const { top, height } = sibling.getBoundingClientRect();
+          return e.clientY <= top + height / 2;
+        });
+
+        elem.insertBefore(dragTarget, nextElem);
+      });
+    });
     workerListRender();
     calenderRender();
   }
@@ -320,100 +343,64 @@
     return [resultYear, resultMonth];
   }
 
-  /**
-   * 달력넘길때 마다 근무자 목록 초기화
-   */
-  function resetWorkerList() {
-    // 로직작성, prevbtn nextbtn에 넣어주기
-    const currentYear = getData("currentYear");
-    const currentMonth = getData("currentMonth");
-    const data = getData(`${currentYear}-${currentMonth}`);
-    const newWorkerList = [];
-
-    const firstWorkerObj = data.reduce(
-      (result, { day, worker }) => {
-        const { weekdayWorkers, saturdayWorkers, sundayWorkers, workers } =
-          result;
-
-        if (result.workers.indexOf(worker) === -1) {
-          result.workers.push(worker);
-        }
-
-        if (day === 0 && sundayWorkers.indexOf(worker) === -1) {
-          result.sundayWorkers.push(worker);
-        } else if (day === 6 && saturdayWorkers.indexOf(worker) === -1) {
-          result.saturdayWorkers.push(worker);
-        } else if (weekdayWorkers.indexOf(worker) === -1) {
-          result.weekdayWorkers.push(worker);
-        }
-
-        return result;
-      },
-      {
-        weekdayWorkers: [],
-        saturdayWorkers: [],
-        sundayWorkers: [],
-        workers: [],
-      }
-    );
-
-    const { weekdayWorkers, saturdayWorkers, sundayWorkers, workers } =
-      firstWorkerObj;
-    const firstWeekdayWorker = weekdayWorkers[0];
-    const firstSaturdayWorker = saturdayWorkers[0];
-    const firstSundayWorker = sundayWorkers[0];
-
-    weekdayWorkers.forEach((worker) => {
-      const result = {
-        name: worker,
-        weekday: worker === firstWeekdayWorker ? true : false,
-        saturday: worker === firstSaturdayWorker ? true : false,
-        sunday: worker === firstSundayWorker ? true : false,
-      };
-
-      newWorkerList.push(result);
-    });
-    setData("workerList", newWorkerList);
-    workerListRender();
-  }
-
   toggleBtn.addEventListener("click", (e) => {
-    const workerList = getData("workerList");
+    const workerList = getData("newWorkerList");
+    const workOrders = Array.from(document.querySelectorAll(".work-orders"));
     const body = document.body;
     body.classList.toggle("calender-mode");
 
     if (!body.classList.contains("calender-mode")) {
-      const workOrders = Array.from(document.querySelectorAll(".work-orders"));
-      const orderArr = workerList.map(
-        ({ name, weekday, saturday, sunday }) =>
-          `<p class="work-order 
-        ${weekday ? "next-weekday-worker" : ""}
-        ${saturday ? "next-saturday-worker" : ""}
-        ${sunday ? "next-sunday-worker" : ""}
-        ">${name}</p>`
+      // 근무순서 설정 화면
+
+      const orderArr = listKey.reduce(
+        (prev, key) => {
+          const currentList = workerList[key];
+          currentList.forEach(({ name }) => {
+            prev[key].push(`<p class="work-order" draggable=true>${name}</p>`);
+          });
+          return prev;
+        },
+        {
+          weekday: [],
+          saturday: [],
+          sunday: [],
+        }
       );
-      workOrders.forEach((workOrder) => {
-        workOrder.innerHTML = orderArr.join("");
+      listKey.forEach((key, i) => {
+        workOrders[i].innerHTML = orderArr[key].join("");
+      });
+
+      [...document.querySelectorAll(".work-order")].forEach((elem) => {
+        elem.addEventListener("dragstart", () =>
+          elem.classList.add("dragging")
+        );
+        elem.addEventListener("dragend", () =>
+          elem.classList.remove("dragging")
+        );
       });
     } else {
-      const { weekday, saturday, sunday } = workOrder.children;
-      const nextWeekdayWorker = weekday.querySelector(
-        ".next-weekday-worker"
-      ).innerText;
-      const nextSaturdayWorker = saturday.querySelector(
-        ".next-saturday-worker"
-      ).innerText;
-      const nextSundayWorker = sunday.querySelector(
-        ".next-sunday-worker"
-      ).innerText;
-
-      workerList.forEach((worker) => {
-        worker.weekday = worker.name === nextWeekdayWorker ? true : false;
-        worker.saturday = worker.name === nextSaturdayWorker ? true : false;
-        worker.sunday = worker.name === nextSundayWorker ? true : false;
+      // 설정한 근무순서를 바탕으로 달력제작
+      const directedList = workOrders.map((workorder) => {
+        return [...workorder.children].map((elem) => elem.innerText);
       });
 
-      setData("workerList", workerList);
+      // const {weekday: originWeekday, saturday: originSaturday, sunday: originSunday} = workerList;
+
+      listKey.forEach((key, i) => {
+        workerList[key].sort((a, b) => {
+          const second = directedList[i].indexOf(a.name);
+          const first = directedList[i].indexOf(b.name);
+          if (first - second < 0) return 1;
+          if (first - second === 0) return 0;
+          if (first - second > 0) return -1;
+        });
+
+        workerList[key].forEach((obj, i) => {
+          obj.isNext = i === 0 ? true : false;
+        });
+      });
+
+      setData("newWorkerList", workerList);
       calenderDataMaker();
     }
   });
@@ -436,7 +423,7 @@
       target.parentElement.parentElement.firstElementChild.innerText;
     const listChild = target.parentElement.parentElement;
     const targetClassName = target.className;
-    const workerList = getData("workerList");
+    const workerList = getData("newWorkerList");
 
     switch (targetClassName) {
       case "revise-btn":
@@ -446,29 +433,29 @@
         `;
         return;
       case "delete-btn":
-        const selected = workerList.filter(
-          ({ name }) => name === workerName
-        )[0];
-        const selectedIndex = workerList.indexOf(selected);
-        const checkArr = ["weekday", "saturday", "sunday"];
-
-        checkArr.forEach((type) => {
-          if (selected[type]) {
-            const nextIndex =
-              selectedIndex + 1 === workerList.length ? 0 : selectedIndex + 1;
-            workerList[nextIndex][type] = true;
-          }
+        listKey.forEach((key) => {
+          const currentList = workerList[key];
+          const selected = currentList.filter(
+            ({ name }) => name === workerName
+          )[0];
+          const selectedIndex = currentList.indexOf(selected);
+          const nextIndex =
+            selectedIndex + 1 === currentList.length ? 0 : selectedIndex + 1;
+          currentList[nextIndex].isNext = true;
+          currentList.splice(selectedIndex, 1);
         });
 
-        workerList.splice(selectedIndex, 1);
         break;
       case "revised-name-save":
         const revisedName = target.parentElement.firstElementChild.value;
         const originName = target.dataset.originname;
-        workerList.forEach((obj) => {
-          if (obj.name === originName) {
-            obj.name = revisedName;
-          }
+        listKey.forEach((key) => {
+          const currentList = workerList[key];
+          currentList.forEach((obj) => {
+            if (obj.name === originName) {
+              obj.name = revisedName;
+            }
+          });
         });
         break;
     }
@@ -477,7 +464,7 @@
       targetClassName === "delete-btn" ||
       targetClassName === "revised-name-save"
     ) {
-      setData("workerList", workerList);
+      setData("newWorkerList", workerList);
       calenderDataMaker();
       workerListRender();
     }
@@ -488,16 +475,19 @@
     const targetClassName = target.className;
 
     if (e.key === "Enter" && targetClassName === "revise-input") {
-      const workerList = getData("workerList");
+      const workerList = getData("newWorkerList");
       const revisedName = target.value;
       const originName =
         target.parentElement.lastElementChild.dataset.originname;
-      workerList.forEach((obj) => {
-        if (obj.name === originName) {
-          obj.name = revisedName;
-        }
+      listKey.forEach((key) => {
+        const currentList = workerList[key];
+        currentList.forEach((obj) => {
+          if (obj.name === originName) {
+            obj.name = revisedName;
+          }
+        });
       });
-      setData("workerList", workerList);
+      setData("newWorkerList", workerList);
       calenderDataMaker();
       workerListRender();
     }
@@ -557,41 +547,53 @@
         setData("currentYear", nextYear);
         setData("currentMonth", nextMonth);
 
-        const workerList = getData("workerList");
+        const workerList = getData("newWorkerList");
         const lastWorkerObj = curData.reduce(
           (result, { day, worker }) => {
-            if (day === 0) {
-              result.sundayWorkers.push(worker);
-            } else if (day === 6) {
-              result.saturdayWorkers.push(worker);
-            } else {
-              result.weekdayWorkers.push(worker);
+            switch (day) {
+              case 0:
+                if (result.lastSundayWorker !== worker) {
+                  result.lastSundayWorker = worker;
+                }
+                break;
+              case 6:
+                if (result.lastSaturdayWorker !== worker) {
+                  result.lastSaturdayWorker = worker;
+                }
+                break;
+              default:
+                if (result.lastWeekdayWorker !== worker) {
+                  result.lastWeekdayWorker = worker;
+                }
+                break;
             }
 
             return result;
           },
           {
-            weekdayWorkers: [],
-            saturdayWorkers: [],
-            sundayWorkers: [],
+            lastWeekdayWorker: "",
+            lastSaturdayWorker: "",
+            lastSundayWorker: "",
           }
         );
-        const { weekdayWorkers, saturdayWorkers, sundayWorkers } =
+        const { lastWeekdayWorker, lastSaturdayWorker, lastSundayWorker } =
           lastWorkerObj;
-        const lastWeekdayWorker = weekdayWorkers[weekdayWorkers.length - 1];
-        const lastSaturdayWorker = saturdayWorkers[saturdayWorkers.length - 1];
-        const lastSundayWorker = sundayWorkers[sundayWorkers.length - 1];
-
-        workerList.forEach((worker, i) => {
-          const nextIndex = i + 1 === workerList.length ? 0 : i + 1;
-          workerList[nextIndex].weekday =
-            worker.name === lastWeekdayWorker ? true : false;
-          workerList[nextIndex].saturday =
-            worker.name === lastSaturdayWorker ? true : false;
-          workerList[nextIndex].sunday =
-            worker.name === lastSundayWorker ? true : false;
+        listKey.forEach((key) => {
+          const currentList = workerList[key];
+          const lastWorker =
+            key === "sunday"
+              ? lastSundayWorker
+              : key === "saturday"
+              ? lastSaturdayWorker
+              : lastWeekdayWorker;
+          currentList.forEach((worker, i) => {
+            const nextIndex = i + 1 === currentList.length ? 0 : i + 1;
+            currentList[nextIndex].isNext =
+              worker.name === lastWorker ? true : false;
+          });
         });
-        setData("workerList", workerList);
+        console.log(workerList);
+        setData("newWorkerList", workerList);
         nextData ? calenderDataMaker() : calenderDataMaker(true);
         calenderTitle.innerText = `${nextYear}년 ${nextMonth + 1}월`;
         !isAlreadyExist()
@@ -640,36 +642,6 @@
           });
         break;
     }
-
-    if (e.target.id === "prev-btn" || e.target.id === "next-btn") {
-      resetWorkerList();
-    }
-  });
-
-  workOrder.addEventListener("click", (e) => {
-    const target = e.target;
-    if (target.classList.contains("work-order")) {
-      const parentElement = target.parentElement;
-      const grandParentElement = parentElement.parentElement;
-
-      Array.from(parentElement.children).forEach((elem) => {
-        elem.classList.remove("next-weekday-worker");
-        elem.classList.remove("next-saturday-worker");
-        elem.classList.remove("next-sunday-worker");
-      });
-
-      switch (grandParentElement.id) {
-        case "weekday":
-          target.classList.add("next-weekday-worker");
-          break;
-        case "saturday":
-          target.classList.add("next-saturday-worker");
-          break;
-        case "sunday":
-          target.classList.add("next-sunday-worker");
-          break;
-      }
-    }
   });
 
   tbody.addEventListener("click", (e) => {
@@ -681,7 +653,7 @@
       const currentYear = getData("currentYear");
       const currentMonth = getData("currentMonth");
       const curData = getData(`${currentYear}-${currentMonth}`);
-      const workerList = getData("workerList");
+      const workerList = getData("newWorkerList");
 
       const directDate = target.innerText;
       if (isAlreadyExist()) {
@@ -691,53 +663,67 @@
           false
         );
         const prevData = getData(`${prevYear}-${prevMonth}`);
-        const prevLastWorkerObj = prevData.reduce(
+        const lastWorkerObj = prevData.reduce(
           (result, { day, worker }) => {
-            if (day === 0) {
-              result.sundayWorkers.push(worker);
-            } else if (day === 6) {
-              result.saturdayWorkers.push(worker);
-            } else {
-              result.weekdayWorkers.push(worker);
+            switch (day) {
+              case 0:
+                if (result.lastSundayWorker !== worker) {
+                  result.lastSundayWorker = worker;
+                }
+              case 6:
+                if (result.lastSaturdayWorker !== worker) {
+                  result.lastSaturdayWorker = worker;
+                }
+              default:
+                if (result.lastWeekdayWorker !== worker) {
+                  result.lastWeekdayWorker = worker;
+                }
             }
 
             return result;
           },
           {
-            weekdayWorkers: [],
-            saturdayWorkers: [],
-            sundayWorkers: [],
+            lastWeekdayWorker: "",
+            lastSaturdayWorker: "",
+            lastSundayWorker: "",
           }
         );
 
-        const { weekdayWorkers, saturdayWorkers, sundayWorkers } =
-          prevLastWorkerObj;
-        const lastWeekdayWorker = weekdayWorkers[weekdayWorkers.length - 1];
-        const lastSaturdayWorker = saturdayWorkers[saturdayWorkers.length - 1];
-        const lastSundayWorker = sundayWorkers[sundayWorkers.length - 1];
+        const { lastWeekdayWorker, lastSaturdayWorker, lastSundayWorker } =
+          lastWorkerObj;
 
-        workerList.forEach((worker, i) => {
-          const nextIndex = i + 1 === workerList.length ? 0 : i + 1;
-          workerList[nextIndex].weekday =
-            worker.name === lastWeekdayWorker ? true : false;
-          workerList[nextIndex].saturday =
-            worker.name === lastSaturdayWorker ? true : false;
-          workerList[nextIndex].sunday =
-            worker.name === lastSundayWorker ? true : false;
+        listKey.forEach((key) => {
+          const currentList = workerList[key];
+          const lastWorker =
+            key === "sunday"
+              ? lastSundayWorker
+              : key === "saturday"
+              ? lastSaturdayWorker
+              : lastWeekdayWorker;
+          currentList.forEach((worker, i) => {
+            const nextIndex = i + 1 === currentList.length ? 0 : i + 1;
+            currentList[nextIndex].isNext =
+              worker.name === lastWorker ? true : false;
+          });
         });
       } else {
-        const firstSundayWorker = curData.filter(({ day }) => day === 0)[0]
-          .worker;
-        const firstSaturdayWorker = curData.filter(({ day }) => day === 6)[0]
-          .worker;
-        const firstWeekdayWorker = curData.filter(
+        const firstSundayWorker = curData.find(({ day }) => day === 0).worker;
+        const firstSaturdayWorker = curData.find(({ day }) => day === 6).worker;
+        const firstWeekdayWorker = curData.find(
           ({ day }) => day !== 0 && day !== 6
-        )[0].worker;
+        ).worker;
 
-        workerList.forEach((worker) => {
-          worker.weekday = worker.name === firstWeekdayWorker ? true : false;
-          worker.saturday = worker.name === firstSaturdayWorker ? true : false;
-          worker.sunday = worker.name === firstSundayWorker ? true : false;
+        listKey.forEach((key) => {
+          const currentList = workerList[key];
+          const lastWorker =
+            key === "sunday"
+              ? firstSundayWorker
+              : key === "saturday"
+              ? firstSaturdayWorker
+              : firstWeekdayWorker;
+          currentList.forEach((worker) => {
+            worker.isNext = worker.name === lastWorker ? true : false;
+          });
         });
       }
 
@@ -759,7 +745,7 @@
       });
 
       setData(`${currentYear}-${currentMonth}`, curData);
-      setData("workerList", workerList);
+      setData("newWorkerList", workerList);
       calenderDataMaker();
     }
   });

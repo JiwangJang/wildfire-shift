@@ -17,6 +17,16 @@
   font-style: normal;
 }
 
+*::-webkit-scrollbar {
+  background-color: #222222;
+  border-radius: 10px;
+  width: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: #525252;
+  border-radius: 10px;
+}
+
 body {
   background-color: #121212;
   font-family: LINESeedKR-regular;
@@ -97,7 +107,7 @@ th {
 }
 
 #list-part {
-  height: calc(100% - 155px);
+  height: calc(100% - 15vh);
 }
 
 #register-part-title,
@@ -109,7 +119,7 @@ th {
 }
 
 #worker-list {
-  height: calc(100% - 72px);
+  height: calc(100% - 70px);
   overflow-y: auto;
 }
 
@@ -391,8 +401,9 @@ body.calender-mode #toggle-btn::after {
 .work-orders {
   font-size: 1.8vw;
   text-align: center;
-  overflow: auto;
+  overflow-y: auto;
   height: 60vh;
+  width: 12vw;
 }
 
 .work-order {
@@ -405,12 +416,16 @@ body.calender-mode #toggle-btn::after {
   padding-top: 0.3vh;
   background-color: #303030;
   border-radius: 10px;
-  cursor: pointer;
+  cursor: move;
   transition: 0.2s ease-in-out;
 }
 
 .work-order:hover {
   background-color: #515151;
+}
+
+.work-order.dragging {
+  opacity: 0.5;
 }
 
 #weekday .next-weekday-worker,
